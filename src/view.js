@@ -77,6 +77,7 @@ const ViewContainer = new Lang.Class({
             GObject.TYPE_INT,
             GObject.TYPE_STRING,
             GObject.TYPE_BOOLEAN,
+            GObject.TYPE_BOOLEAN,
             GObject.TYPE_BOOLEAN
         ]);
         this.view = new Gd.MainView({
@@ -220,19 +221,18 @@ const ViewContainer = new Lang.Class({
                     this.player.discoverer.discover_uri(item.get_url());
                 this._model.set(
                         iter,
-                        [0, 1, 2, 3, 4, 5, 7, 8, 9, 10],
-                        [toString(item.get_id()), "", item.get_title(), artist, this._symbolicIcon, item, -1, nowPlayingIconName, false, false]
+                        [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11],
+                        [toString(item.get_id()), "", item.get_title(), artist, this._symbolicIcon, item, -1, nowPlayingIconName, false, false, false]
                     );
             } catch(err) {
                 log(err.message);
                 log("failed to discover url " + item.get_url());
                 this._model.set(
                         iter,
-                        [0, 1, 2, 3, 4, 5, 7, 8, 9, 10],
-                        [toString(item.get_id()), "", item.get_title(), artist, this._symbolicIcon, item, -1, errorIconName, false, true]
+                        [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11],
+                        [toString(item.get_id()), "", item.get_title(), artist, this._symbolicIcon, item, -1, errorIconName, false, true, false]
                     );
             }
-            GLib.idle_add(300, Lang.bind(this, this._updateAlbumArt, item, iter));
         }
     },
 
@@ -317,6 +317,28 @@ const Albums = new Lang.Class({
     populate: function() {
         if (grilo.tracker != null)
             grilo.populateAlbums (this._offset, Lang.bind(this, this._addItem, null));
+    },
+
+    _onScrolledWinChange: function() {
+        let [hasVisible, path, end] = this.view.get_generic_view().get_visible_range();
+        if (hasVisible) {
+            do {
+                let iter = this._model.get_iter(path)[1];
+                if (iter) {
+                    if (!this._model.get_value(iter, 11)) {
+                        this._model.set(iter, [11], [true]);
+                        let item = this._model.get_value(iter, 5);
+                        GLib.idle_add(300, Lang.bind(this, this._updateAlbumArt, item, iter));
+                    }
+                    path.next();
+                } else {
+                    break;
+                }
+            }
+            while (path.compare (end) <= 0);
+        }
+
+        ViewContainer.prototype._onScrolledWinChange.call(this);
     },
 
 });
