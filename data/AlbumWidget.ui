@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<interface>
+<interface domain="gnome-music">
   <!-- interface-requires gtk+ 3.0 -->
   <object class="GtkHBox" id="AlbumWidget">
     <property name="visible">True</property>
@@ -103,7 +103,7 @@
                     <property name="halign">end</property>
                     <property name="xalign">1</property>
                     <property name="ypad">2</property>
-                    <property name="label" translatable="yes">&lt;span color='grey'&gt;Released&lt;/span&gt;</property>
+                    <property name="label" translatable="yes" comments="This is the year the album was released.">&lt;span color='grey'&gt;Released&lt;/span&gt;</property>
                     <property name="use_markup">True</property>
                   </object>
                   <packing>
@@ -119,7 +119,7 @@
                     <property name="can_focus">False</property>
                     <property name="halign">end</property>
                     <property name="xalign">1</property>
-                    <property name="label" translatable="yes">&lt;span color='grey'&gt;Running Length&lt;/span&gt;</property>
+                    <property name="label" translatable="yes" comments="This is the total length of the album.">&lt;span color='grey'&gt;Running Length&lt;/span&gt;</property>
                     <property name="use_markup">True</property>
                   </object>
                   <packing>
