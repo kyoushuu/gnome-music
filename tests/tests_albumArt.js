@@ -32,44 +32,44 @@ function testNormalizeAndHash_Lowercased() {
 
 function testNormalizeAndHash_UTF8() {
     let albumArtCache = new AlbumArtCache();
-    assertEquals(_hash("Неизвестный артист"),
-                 albumArtCache.normalizeAndHash("Неизвестный артист", true))
+    assertEquals(_hash("неизвестный артист"),
+                 albumArtCache.normalizeAndHash("Неизвестный артист"))
 }
 
 function testStripInvalidEntries_SmokeTest() {
     let albumArtCache = new AlbumArtCache();
-    assertEquals('Unknown Artist', albumArtCache.stripInvalidEntities("Unknown Artist"))
+    assertEquals('unknown artist', albumArtCache.stripInvalidEntities("Unknown Artist"))
 }
 
 function testStripInvalidEntries_Symbols() {
     let albumArtCache = new AlbumArtCache();
     //Percent and semicolon are not filtered, why?
-    assertEquals('Unknown Artist', albumArtCache.stripInvalidEntities("Unknown_!@#$^&*+=| Artist"))
+    assertEquals('unknown artist', albumArtCache.stripInvalidEntities("Unknown_!@#$^&*+=| Artist"))
 }
 
 function testStripInvalidEntries_Slashes() {
     let albumArtCache = new AlbumArtCache();
-    assertEquals('Unknown Artist', albumArtCache.stripInvalidEntities("Unknown\\ Artist"))
-    assertEquals('Unknown Artist', albumArtCache.stripInvalidEntities("Unknown\ Artist"))
-    assertEquals('Unknown Artist', albumArtCache.stripInvalidEntities("Unk//nown Artist"))
-    assertEquals('Unknown Artist', albumArtCache.stripInvalidEntities("Unk/nown Artist"))
-    assertEquals('Unknown Artist', albumArtCache.stripInvalidEntities("Unk\/nown Artist"))
+    assertEquals('unknown artist', albumArtCache.stripInvalidEntities("Unknown\\ Artist"))
+    assertEquals('unknown artist', albumArtCache.stripInvalidEntities("Unknown\ Artist"))
+    assertEquals('unknown artist', albumArtCache.stripInvalidEntities("Unk//nown Artist"))
+    assertEquals('unknown artist', albumArtCache.stripInvalidEntities("Unk/nown Artist"))
+    assertEquals('unknown artist', albumArtCache.stripInvalidEntities("Unk\/nown Artist"))
 }
 
 function testStripInvalidEntries_Brackets() {
     let albumArtCache = new AlbumArtCache();
-    assertEquals('Unknown Artist', albumArtCache.stripInvalidEntities("Un(known) Artist"))
-    assertEquals('Unknown Artist', albumArtCache.stripInvalidEntities("[Un]known Artist"))
-    assertEquals('Unknown Artist', albumArtCache.stripInvalidEntities("<Un>known Artist"))
-    assertEquals('Unknown Artist', albumArtCache.stripInvalidEntities("{Un}known Artist"))
+    assertEquals('un artist', albumArtCache.stripInvalidEntities("Un(known) Artist"))
+    assertEquals('known artist', albumArtCache.stripInvalidEntities("[Un]known Artist"))
+    assertEquals('known artist', albumArtCache.stripInvalidEntities("<Un>known Artist"))
+    assertEquals('known artist', albumArtCache.stripInvalidEntities("{Un}known Artist"))
 }
 
 function testStripInvalidEntries_Spaces() {
     let albumArtCache = new AlbumArtCache();
-    assertEquals('Unknown Artist', albumArtCache.stripInvalidEntities("Unknown  Artist"))
-    assertEquals('Unknown Artist', albumArtCache.stripInvalidEntities("Unknown   Artist"))
-    assertEquals('Unknown Artist', albumArtCache.stripInvalidEntities("<Unknown>  Artist"))
-    assertEquals('Unknown Artist', albumArtCache.stripInvalidEntities("Unknown^^@(*  ) Artist"))
+    assertEquals('unknown artist', albumArtCache.stripInvalidEntities("Unknown  Artist"))
+    assertEquals('unknown artist', albumArtCache.stripInvalidEntities("Unknown   Artist"))
+    assertEquals('artist', albumArtCache.stripInvalidEntities("<Unknown>  Artist"))
+    assertEquals('unknown artist', albumArtCache.stripInvalidEntities("Unknown^^@(*  ) Artist"))
 }
 
 gjstestRun();
