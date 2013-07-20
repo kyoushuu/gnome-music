@@ -40,6 +40,7 @@ class ViewContainer(Gtk.Stack):
             GObject.TYPE_INT,
             GObject.TYPE_STRING,
             GObject.TYPE_BOOLEAN,
+            GObject.TYPE_BOOLEAN,
             GObject.TYPE_BOOLEAN
         ])
         self.view = Gd.MainView(
@@ -177,18 +178,17 @@ class ViewContainer(Gtk.Stack):
                 if item.get_url():
                     self.player.discoverer.discover_uri(item.get_url())
                 self._model.set(itr,
-                                [0, 1, 2, 3, 4, 5, 7, 8, 9, 10],
+                                [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11],
                                 [str(item.get_id()), "", title,
                                  artist, self._symbolicIcon, item,
-                                 -1, self.nowPlayingIconName, False, False])
+                                 -1, self.nowPlayingIconName, False, False, False])
             except:
                 print("failed to discover url " + item.get_url())
                 self._model.set(iter,
-                                [0, 1, 2, 3, 4, 5, 7, 8, 9, 10],
+                                [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11],
                                 [str(item.get_id()), "", title,
                                  artist, self._symbolicIcon, item,
-                                 -1, self.errorIconName, False, True])
-            GLib.idle_add(self._update_album_art, item, itr)
+                                 -1, self.errorIconName, False, True, False])
 
     def _get_remaining_item_count(self):
         count = -1
@@ -255,6 +255,24 @@ class Albums(ViewContainer):
     def populate(self):
         if grilo.tracker:
             GLib.idle_add(grilo.populate_albums, self._offset, self._add_item)
+
+    def _on_scrolled_win_change(self, data=None):
+        ViewContainer._on_scrolled_win_change(self, data)
+
+        path, end = self.view.get_generic_view().get_visible_range()
+        if path:
+            while True:
+                _iter = self._model.get_iter(path)
+                if _iter:
+                    if not self._model.get_value(_iter, 11):
+                        self._model.set(_iter, [11], [True])
+                        item = self._model.get_value(_iter, 5)
+                        GLib.idle_add(self._update_album_art, item, _iter)
+                    path.next()
+                    if path.compare(end) > 0:
+                        break
+                else:
+                    break
 
 
 class Songs(ViewContainer):
