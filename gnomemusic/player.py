@@ -7,45 +7,6 @@ from gnomemusic.albumArtCache import AlbumArtCache
 
 ART_SIZE = 34
 
-MediaPlayer2PlayerIface = """
-<interface name="org.mpris.MediaPlayer2.Player">
-  <method name="Next"/>
-  <method name="Previous"/>
-  <method name="Pause"/>
-  <method name="PlayPause"/>
-  <method name="Stop"/>
-  <method name="Play"/>
-  <method name="Seek">
-    <arg direction="in" name="Offset" type="x"/>
-  </method>
-  <method name="SetPosition">
-    <arg direction="in" name="TrackId" type="o"/>
-    <arg direction="in" name="Position" type="x"/>
-  </method>
-  <method name="OpenUri">
-    <arg direction="in" name="Uri" type="s"/>
-  </method>
-  <signal name="Seeked">
-    <arg name="Position" type="x"/>
-  </signal>
-  <property name="PlaybackStatus" type="s" access="read"/>
-  <property name="LoopStatus" type="s" access="readwrite"/>
-  <property name="Rate" type="d" access="readwrite"/>
-  <property name="Shuffle" type="b" access="readwrite"/>
-  <property name="Metadata" type="a{sv}" access="read"/>
-  <property name="Volume" type="d" access="readwrite"/>
-  <property name="Position" type="x" access="read"/>
-  <property name="MinimumRate" type="d" access="read"/>
-  <property name="MaximumRate" type="d" access="read"/>
-  <property name="CanGoNext" type="b" access="read"/>
-  <property name="CanGoPrevious" type="b" access="read"/>
-  <property name="CanPlay" type="b" access="read"/>
-  <property name="CanPause" type="b" access="read"/>
-  <property name="CanSeek" type="b" access="read"/>
-  <property name="CanControl" type="b" access="read"/>
-</interface>
-"""
-
 
 class RepeatType:
     NONE = 0
@@ -85,9 +46,6 @@ class Player(GObject.GObject):
         self._settings = Gio.Settings.new('org.gnome.Music')
         self._settings.connect('changed::repeat', self._on_settings_changed)
         self.repeat = self._settings.get_enum('repeat')
-
-        #self._dbusImpl = Gio.DBusExportedObject.wrapJSObject(MediaPlayer2PlayerIface, self)
-        #self._dbusImpl.export(Gio.DBus.session, '/org/mpris/MediaPlayer2')
 
         self.bus.connect("message::state-changed", self._on_bus_state_changed)
         self.bus.connect("message::error", self._onBusError)
@@ -485,24 +443,6 @@ class Player(GObject.GObject):
 
     #MPRIS
 
-    def Next(self):
-        self.play_next()
-
-    def Previous(self):
-        self.play_previous()
-
-    def Pause(self):
-        self.set_playing(False)
-
-    def PlayPause(self):
-        if self.player.get_state(1)[1] == Gst.State.PLAYING:
-            self.set_playing(False)
-        else:
-            self.set_playing(True)
-
-    def Play(self):
-        self.set_playing(True)
-
     def Stop(self):
         self.progressScale.set_value(0)
         self.progressScale.set_sensitive(False)
@@ -540,10 +480,6 @@ class Player(GObject.GObject):
             self.player.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT, position * 1000)
             #self._dbusImpl.emit_signal('Seeked', GLib.Variant.new('(x)', [position]))
 
-    def OpenUriAsync(self, params, invocation):
-        uri = params
-        return uri
-
     def get_playback_status(self):
         ok, state, pending = self.player.get_state(0)
         if ok == Gst.StateChangeReturn.ASYNC:
@@ -574,12 +510,6 @@ class Player(GObject.GObject):
         elif mode == 'Playlist':
             self.repeat = RepeatType.ALL
         self._sync_repeat_image()
-
-    def get_rate(self):
-        return 1.0
-
-    def set_rate(self, rate):
-        pass
 
     def get_shuffle(self):
         return self.repeat == RepeatType.SHUFFLE
@@ -637,34 +567,9 @@ class Player(GObject.GObject):
 
     def set_volume(self, rate):
         self.player.set_volume(GstAudio.StreamVolumeFormat.LINEAR, rate)
-        #self._dbusImpl.emit_property_changed('Volume', GLib.Variant.new('d', rate))
 
     def get_position(self):
         return self.player.query_position(Gst.Format.TIME, None)[1] / 1000
-
-    def get_minimum_rate(self):
-        return 1.0
-
-    def get_maximum_rate(self):
-        return 1.0
-
-    def get_can_go_next(self):
-        return self.has_next()
-
-    def get_can_go_previous(self):
-        return self.has_previous()
-
-    def get_can_play(self):
-        return self.currentTrack is not None
-
-    def get_can_pause(self):
-        return self.currentTrack is not None
-
-    def get_can_seek(self):
-        return True
-
-    def get_can_control(self):
-        return True
 
 
 class SelectionToolbar():
