@@ -15,6 +15,12 @@ class RepeatType:
     SHUFFLE = 3
 
 
+class PlaybackStatus:
+    PLAYING = 0
+    PAUSED = 1
+    STOPPED = 2
+
+
 class Player(GObject.GObject):
     nextTrack = None
     timeout = None
@@ -485,14 +491,14 @@ class Player(GObject.GObject):
         if ok == Gst.StateChangeReturn.ASYNC:
             state = pending
         elif (ok != Gst.StateChangeReturn.SUCCESS):
-            return 'Stopped'
+            return PlaybackStatus.STOPPED
 
         if state == Gst.State.PLAYING:
-            return 'Playing'
+            return PlaybackStatus.PLAYING
         elif state == Gst.State.PAUSED:
-            return 'Paused'
+            return PlaybackStatus.PAUSED
         else:
-            return 'Stopped'
+            return PlaybackStatus.STOPPED
 
     def get_loop_status(self):
         if self.repeat == RepeatType.NONE:
