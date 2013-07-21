@@ -350,6 +350,12 @@ class Player(GObject.GObject):
         if self.currentTrack:
             self.play()
 
+    def play_pause(self):
+        if self.player.get_state(1)[1] == Gst.State.PLAYING:
+            self.set_playing(False)
+        else:
+            self.set_playing(True)
+
     def set_playlist(self, type, id, model, iter, field):
         self.stop()
 
