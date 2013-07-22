@@ -16,6 +16,7 @@ class MediaPlayer2Service(dbus.service.Object):
         self.app = app
         self.player = app.get_active_window().player
         self.player.connect("current-changed", self._on_current_changed)
+        self.player.connect("playback-status-changed", self._on_playback_status_changed)
 
     def _get_playback_status(self):
         state = self.player.get_playback_status()
@@ -32,6 +33,13 @@ class MediaPlayer2Service(dbus.service.Object):
                 'Metadata': dbus.Dictionary(self.player.get_metadata(), signature='sv'),
                 'CanPlay': True,
                 'CanPause': True,
+            },
+            [])
+
+    def _on_playback_status_changed(self, data=None):
+        self.PropertiesChanged(self.MEDIA_PLAYER2_PLAYER_IFACE,
+            {
+                'PlaybackStatus': self._get_playback_status(),
             },
             [])
 
