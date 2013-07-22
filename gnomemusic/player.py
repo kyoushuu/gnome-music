@@ -32,6 +32,7 @@ class Player(GObject.GObject):
         'current-changed': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'playback-status-changed': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'repeat-mode-changed': (GObject.SIGNAL_RUN_FIRST, None, ()),
+        'volume-changed': (GObject.SIGNAL_RUN_FIRST, None, ()),
     }
 
     def __init__(self):
@@ -555,6 +556,7 @@ class Player(GObject.GObject):
 
     def set_volume(self, rate):
         self.player.set_volume(GstAudio.StreamVolumeFormat.LINEAR, rate)
+        self.emit('volume-changed')
 
     def get_position(self):
         return self.player.query_position(Gst.Format.TIME, None)[1] / 1000
