@@ -15,6 +15,7 @@ class MediaPlayer2Service(dbus.service.Object):
         dbus.service.Object.__init__(self, name, '/org/mpris/MediaPlayer2')
         self.app = app
         self.player = app.get_active_window().player
+        self.player.connect("current-changed", self._on_current_changed)
 
     def _get_playback_status(self):
         state = self.player.get_playback_status()
@@ -24,6 +25,15 @@ class MediaPlayer2Service(dbus.service.Object):
             return 'Paused'
         else:
             return 'Stopped'
+
+    def _on_current_changed(self, player, data=None):
+        self.PropertiesChanged(self.MEDIA_PLAYER2_PLAYER_IFACE,
+            {
+                'Metadata': dbus.Dictionary(self.player.get_metadata(), signature='sv'),
+                'CanPlay': True,
+                'CanPause': True,
+            },
+            [])
 
     @dbus.service.method(dbus_interface=MEDIA_PLAYER2_IFACE)
     def Raise(self):
@@ -91,6 +101,7 @@ class MediaPlayer2Service(dbus.service.Object):
             return {
                 'PlaybackStatus': self._get_playback_status(),
                 'Rate': 1.0,
+                'Metadata': dbus.Dictionary(self.player.get_metadata(), signature='sv'),
                 'MinimumRate': 1.0,
                 'MaximumRate': 1.0,
                 'CanPlay': self.player.currentTrack is not None,
