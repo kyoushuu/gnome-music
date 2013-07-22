@@ -5,11 +5,14 @@ from dbus.mainloop.glib import DBusGMainLoop
 
 class MediaPlayer2Service(dbus.service.Object):
     MEDIA_PLAYER2_IFACE = 'org.mpris.MediaPlayer2'
+    MEDIA_PLAYER2_PLAYER_IFACE = 'org.mpris.MediaPlayer2.Player'
+
     def __init__(self, app):
         DBusGMainLoop(set_as_default=True)
         name = dbus.service.BusName('org.mpris.MediaPlayer2.GnomeMusic', dbus.SessionBus())
         dbus.service.Object.__init__(self, name, '/org/mpris/MediaPlayer2')
         self.app = app
+        self.player = app.get_active_window().player
 
     @dbus.service.method(dbus_interface=MEDIA_PLAYER2_IFACE)
     def Raise(self):
@@ -18,6 +21,35 @@ class MediaPlayer2Service(dbus.service.Object):
     @dbus.service.method(dbus_interface=MEDIA_PLAYER2_IFACE)
     def Quit(self):
         self.app.quit()
+
+    @dbus.service.method(dbus_interface=MEDIA_PLAYER2_PLAYER_IFACE)
+    def Next(self):
+        self.player.play_next()
+
+    @dbus.service.method(dbus_interface=MEDIA_PLAYER2_PLAYER_IFACE)
+    def Previous(self):
+        self.player.play_previous()
+
+    @dbus.service.method(dbus_interface=MEDIA_PLAYER2_PLAYER_IFACE)
+    def Pause(self):
+        self.player.set_playing(False)
+
+    @dbus.service.method(dbus_interface=MEDIA_PLAYER2_PLAYER_IFACE)
+    def PlayPause(self):
+        self.player.play_pause()
+
+    @dbus.service.method(dbus_interface=MEDIA_PLAYER2_PLAYER_IFACE)
+    def Stop(self):
+        self.player.Stop()
+
+    @dbus.service.method(dbus_interface=MEDIA_PLAYER2_PLAYER_IFACE)
+    def Play(self):
+        self.player.set_playing(True)
+
+    @dbus.service.method(dbus_interface=MEDIA_PLAYER2_PLAYER_IFACE,
+                         in_signature='s')
+    def OpenUri(self, uri):
+        pass
 
     @dbus.service.method(dbus_interface=dbus.PROPERTIES_IFACE,
                          in_signature='ss', out_signature='v')
@@ -44,6 +76,16 @@ class MediaPlayer2Service(dbus.service.Object):
                     'audio/mpeg'
                 ],
             }
+        elif interface_name == self.MEDIA_PLAYER2_PLAYER_IFACE:
+            return {
+                'Rate': 1.0,
+                'MinimumRate': 1.0,
+                'MaximumRate': 1.0,
+                'CanPlay': self.player.currentTrack is not None,
+                'CanPause': self.player.currentTrack is not None,
+                'CanSeek': True,
+                'CanControl': True,
+            }
         else:
             raise dbus.exceptions.DBusException(
                 'org.mpris.MediaPlayer2.GnomeMusic',
@@ -55,6 +97,9 @@ class MediaPlayer2Service(dbus.service.Object):
     def Set(self, interface_name, property_name, new_value):
         if interface_name == self.MEDIA_PLAYER2_IFACE:
             pass
+        elif interface_name == self.MEDIA_PLAYER2_PLAYER_IFACE:
+            if property_name == 'Rate':
+                pass
         else:
             raise dbus.exceptions.DBusException(
                 'org.mpris.MediaPlayer2.GnomeMusic',
