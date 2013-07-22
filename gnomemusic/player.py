@@ -33,6 +33,7 @@ class Player(GObject.GObject):
         'playback-status-changed': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'repeat-mode-changed': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'volume-changed': (GObject.SIGNAL_RUN_FIRST, None, ()),
+        'prev-next-invalidated': (GObject.SIGNAL_RUN_FIRST, None, ()),
     }
 
     def __init__(self):
@@ -200,8 +201,7 @@ class Player(GObject.GObject):
         self.nextBtn.set_sensitive(hasNext)
         self.prevBtn.set_sensitive(hasPrevious)
 
-        #self._dbusImpl.emit_property_changed('CanGoNext', GLib.Variant.new('b', hasNext))
-        #self._dbusImpl.emit_property_changed('CanGoPrevious', GLib.Variant.new('b', hasPrevious))
+        self.emit('prev-next-invalidated')
 
     def set_playing(self, value):
         self.eventBox.show()
