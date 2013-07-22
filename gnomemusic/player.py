@@ -34,6 +34,7 @@ class Player(GObject.GObject):
         'repeat-mode-changed': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'volume-changed': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'prev-next-invalidated': (GObject.SIGNAL_RUN_FIRST, None, ()),
+        'seeked': (GObject.SIGNAL_RUN_FIRST, None, (int,)),
     }
 
     def __init__(self):
@@ -440,13 +441,13 @@ class Player(GObject.GObject):
         seconds = scroll.get_value() / 60
         if seconds != self.duration:
             self.player.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT, seconds * 1000000000)
-            #self._dbusImpl.emit_signal('Seeked', GLib.Variant.new('(x)', [seconds * 1000000]))
+            self.emit('seeked', seconds * 1000000)
         else:
             duration = self.player.query_duration(Gst.Format.TIME)
             if duration:
                 #Rewind a second back before the track end
                 self.player.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT, duration[1] - 1000000000)
-                #self._dbusImpl.emit_signal('Seeked', GLib.Variant.new('(x)', [(duration[1] - 1000000000) / 1000]))
+                self.emit('seeked', (duration[1] - 1000000000) / 1000)
         return True
 
     #MPRIS
