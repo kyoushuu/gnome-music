@@ -18,6 +18,7 @@ class MediaPlayer2Service(dbus.service.Object):
         self.player.connect("current-changed", self._on_current_changed)
         self.player.connect("playback-status-changed", self._on_playback_status_changed)
         self.player.connect("repeat-mode-changed", self._on_repeat_mode_changed)
+        self.player.connect("volume-changed", self._on_volume_changed)
 
     def _get_playback_status(self):
         state = self.player.get_playback_status()
@@ -57,6 +58,13 @@ class MediaPlayer2Service(dbus.service.Object):
             {
                 'LoopStatus': self._get_loop_status(),
                 'Shuffle': self.player.repeat == RepeatType.SHUFFLE,
+            },
+            [])
+
+    def _on_volume_changed(self, player, data=None):
+        self.PropertiesChanged(self.MEDIA_PLAYER2_PLAYER_IFACE,
+            {
+                'Volume': self.player.get_volume(),
             },
             [])
 
@@ -129,6 +137,7 @@ class MediaPlayer2Service(dbus.service.Object):
                 'Rate': 1.0,
                 'Shuffle': self.player.repeat == RepeatType.SHUFFLE,
                 'Metadata': dbus.Dictionary(self.player.get_metadata(), signature='sv'),
+                'Volume': self.player.get_volume(),
                 'MinimumRate': 1.0,
                 'MaximumRate': 1.0,
                 'CanPlay': self.player.currentTrack is not None,
@@ -150,6 +159,8 @@ class MediaPlayer2Service(dbus.service.Object):
         elif interface_name == self.MEDIA_PLAYER2_PLAYER_IFACE:
             if property_name == 'Rate':
                 pass
+            elif property_name == 'Volume':
+                self.player.set_volume(new_value)
             elif property_name == 'LoopStatus':
                 if new_value == 'None':
                     self.player.set_repeat_mode(RepeatType.NONE)
