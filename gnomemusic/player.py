@@ -196,14 +196,14 @@ class Player(GObject.GObject):
 
         return previousTrack
 
-    def _has_next(self):
+    def has_next(self):
         if self.repeat in [RepeatType.ALL, RepeatType.SONG, RepeatType.SHUFFLE]:
             return True
         else:
             tmp = self.currentTrack.copy()
             return self.playlist.iter_next(tmp) is not None
 
-    def _has_previous(self):
+    def has_previous(self):
         if self.repeat in [RepeatType.ALL, RepeatType.SONG, RepeatType.SHUFFLE]:
             return True
         else:
@@ -226,8 +226,8 @@ class Player(GObject.GObject):
             self.playBtn.set_image(image)
 
     def _sync_prev_next(self):
-        hasNext = self._has_next()
-        hasPrevious = self._has_previous()
+        hasNext = self.has_next()
+        hasPrevious = self.has_previous()
 
         self.nextBtn.set_sensitive(hasNext)
         self.prevBtn.set_sensitive(hasPrevious)
@@ -643,10 +643,10 @@ class Player(GObject.GObject):
         return 1.0
 
     def get_can_go_next(self):
-        return self._has_next()
+        return self.has_next()
 
     def get_can_go_previous(self):
-        return self._has_previous()
+        return self.has_previous()
 
     def get_can_play(self):
         return self.currentTrack is not None
