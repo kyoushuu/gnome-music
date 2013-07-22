@@ -459,37 +459,6 @@ class Player(GObject.GObject):
         self.stop()
         self.emit('playback-status-changed')
 
-    def SeekAsync(self, params, invocation):
-        offset = params
-
-        duration = self.player.query_duration(Gst.Format.TIME)
-        if duration is None:
-            return
-
-        if offset < 0:
-            offset = 0
-
-        if duration[1] >= offset * 1000:
-            self.player.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT, offset * 1000)
-            #self._dbusImpl.emit_signal('Seeked', GLib.Variant.new('(x)', [offset]))
-        else:
-            self.play_next()
-
-    def SetPositionAsync(self, params, invocation):
-        trackId, position = params
-
-        if self.currentTrack is None:
-            return
-
-        media = self.playlist.get_value(self.currentTrack, self.playlistField)
-        if trackId != '/org/mpris/MediaPlayer2/Track/' + media.get_id():
-            return
-
-        duration = self.player.query_duration(Gst.Format.TIME)
-        if duration and position >= 0 and duration[1] >= position * 1000:
-            self.player.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT, position * 1000)
-            #self._dbusImpl.emit_signal('Seeked', GLib.Variant.new('(x)', [position]))
-
     def get_playback_status(self):
         ok, state, pending = self.player.get_state(0)
         if ok == Gst.StateChangeReturn.ASYNC:
@@ -510,6 +479,26 @@ class Player(GObject.GObject):
     def set_repeat_mode(self, mode):
         self.repeat = mode
         self._sync_repeat_image()
+
+    def get_position(self):
+        return self.player.query_position(Gst.Format.TIME)[1] / 1000
+
+    def set_position(self, offset, start_if_ne=False, next_on_overflow=False):
+        if offset < 0:
+            if start_if_ne:
+                offset = 0
+            else:
+                return
+
+        duration = self.player.query_duration(Gst.Format.TIME)
+        if duration is None:
+            return
+
+        if duration[1] >= offset * 1000:
+            self.player.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT, offset * 1000)
+            self.emit('seeked', offset)
+        elif next_on_overflow:
+            self.play_next()
 
     def get_metadata(self):
         if self.currentTrack is None:
@@ -558,9 +547,6 @@ class Player(GObject.GObject):
     def set_volume(self, rate):
         self.player.set_volume(GstAudio.StreamVolumeFormat.LINEAR, rate)
         self.emit('volume-changed')
-
-    def get_position(self):
-        return self.player.query_position(Gst.Format.TIME, None)[1] / 1000
 
 
 class SelectionToolbar():
