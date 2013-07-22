@@ -2,7 +2,7 @@ import dbus
 import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 
-from gnomemusic.player import PlaybackStatus
+from gnomemusic.player import PlaybackStatus, RepeatType
 
 
 class MediaPlayer2Service(dbus.service.Object):
@@ -17,6 +17,7 @@ class MediaPlayer2Service(dbus.service.Object):
         self.player = app.get_active_window().player
         self.player.connect("current-changed", self._on_current_changed)
         self.player.connect("playback-status-changed", self._on_playback_status_changed)
+        self.player.connect("repeat-mode-changed", self._on_repeat_mode_changed)
 
     def _get_playback_status(self):
         state = self.player.get_playback_status()
@@ -26,6 +27,14 @@ class MediaPlayer2Service(dbus.service.Object):
             return 'Paused'
         else:
             return 'Stopped'
+
+    def _get_loop_status(self):
+        if self.player.repeat == RepeatType.NONE:
+            return 'None'
+        elif self.player.repeat == RepeatType.SONG:
+            return 'Track'
+        else:
+            return 'Playlist'
 
     def _on_current_changed(self, player, data=None):
         self.PropertiesChanged(self.MEDIA_PLAYER2_PLAYER_IFACE,
@@ -40,6 +49,14 @@ class MediaPlayer2Service(dbus.service.Object):
         self.PropertiesChanged(self.MEDIA_PLAYER2_PLAYER_IFACE,
             {
                 'PlaybackStatus': self._get_playback_status(),
+            },
+            [])
+
+    def _on_repeat_mode_changed(self, player, data=None):
+        self.PropertiesChanged(self.MEDIA_PLAYER2_PLAYER_IFACE,
+            {
+                'LoopStatus': self._get_loop_status(),
+                'Shuffle': self.player.repeat == RepeatType.SHUFFLE,
             },
             [])
 
@@ -108,7 +125,9 @@ class MediaPlayer2Service(dbus.service.Object):
         elif interface_name == self.MEDIA_PLAYER2_PLAYER_IFACE:
             return {
                 'PlaybackStatus': self._get_playback_status(),
+                'LoopStatus': self._get_loop_status(),
                 'Rate': 1.0,
+                'Shuffle': self.player.repeat == RepeatType.SHUFFLE,
                 'Metadata': dbus.Dictionary(self.player.get_metadata(), signature='sv'),
                 'MinimumRate': 1.0,
                 'MaximumRate': 1.0,
@@ -131,6 +150,18 @@ class MediaPlayer2Service(dbus.service.Object):
         elif interface_name == self.MEDIA_PLAYER2_PLAYER_IFACE:
             if property_name == 'Rate':
                 pass
+            elif property_name == 'LoopStatus':
+                if new_value == 'None':
+                    self.player.set_repeat_mode(RepeatType.NONE)
+                elif new_value == 'Track':
+                    self.player.set_repeat_mode(RepeatType.SONG)
+                elif new_value == 'Playlist':
+                    self.player.set_repeat_mode(RepeatType.ALL)
+            elif property_name == 'Shuffle':
+                if (new_value and self.player.get_repeat_mode() != RepeatType.SHUFFLE):
+                    self.set_repeat_mode(RepeatType.SHUFFLE)
+                elif new_value and self.player.get_repeat_mode() == RepeatType.SHUFFLE:
+                    self.set_repeat_mode(RepeatType.NONE)
         else:
             raise dbus.exceptions.DBusException(
                 'org.mpris.MediaPlayer2.GnomeMusic',
