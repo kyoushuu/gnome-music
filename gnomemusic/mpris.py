@@ -2,6 +2,8 @@ import dbus
 import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 
+from gnomemusic.player import PlaybackStatus
+
 
 class MediaPlayer2Service(dbus.service.Object):
     MEDIA_PLAYER2_IFACE = 'org.mpris.MediaPlayer2'
@@ -13,6 +15,15 @@ class MediaPlayer2Service(dbus.service.Object):
         dbus.service.Object.__init__(self, name, '/org/mpris/MediaPlayer2')
         self.app = app
         self.player = app.get_active_window().player
+
+    def _get_playback_status(self):
+        state = self.player.get_playback_status()
+        if state == PlaybackStatus.PLAYING:
+            return 'Playing'
+        elif state == PlaybackStatus.PAUSED:
+            return 'Paused'
+        else:
+            return 'Stopped'
 
     @dbus.service.method(dbus_interface=MEDIA_PLAYER2_IFACE)
     def Raise(self):
@@ -78,6 +89,7 @@ class MediaPlayer2Service(dbus.service.Object):
             }
         elif interface_name == self.MEDIA_PLAYER2_PLAYER_IFACE:
             return {
+                'PlaybackStatus': self._get_playback_status(),
                 'Rate': 1.0,
                 'MinimumRate': 1.0,
                 'MaximumRate': 1.0,
