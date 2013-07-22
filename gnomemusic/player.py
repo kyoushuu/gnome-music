@@ -502,31 +502,11 @@ class Player(GObject.GObject):
         else:
             return PlaybackStatus.STOPPED
 
-    def get_loop_status(self):
-        if self.repeat == RepeatType.NONE:
-            return 'None'
-        elif self.repeat == RepeatType.SONG:
-            return 'Track'
-        else:
-            return 'Playlist'
+    def get_repeat_mode(self):
+        return self.repeat
 
-    def set_loop_status(self, mode):
-        if mode == 'None':
-            self.repeat = RepeatType.NONE
-        elif mode == 'Track':
-            self.repeat = RepeatType.SONG
-        elif mode == 'Playlist':
-            self.repeat = RepeatType.ALL
-        self._sync_repeat_image()
-
-    def get_shuffle(self):
-        return self.repeat == RepeatType.SHUFFLE
-
-    def set_shuffle(self, enable):
-        if (enable and self.repeat != RepeatType.SHUFFLE):
-            self.repeat = RepeatType.SHUFFLE
-        elif enable is not None and self.repeat == RepeatType.SHUFFLE:
-            self.repeat = RepeatType.NONE
+    def set_repeat_mode(self, mode):
+        self.repeat = mode
         self._sync_repeat_image()
 
     def get_metadata(self):
