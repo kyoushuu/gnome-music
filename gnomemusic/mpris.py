@@ -19,6 +19,7 @@ class MediaPlayer2Service(dbus.service.Object):
         self.player.connect("playback-status-changed", self._on_playback_status_changed)
         self.player.connect("repeat-mode-changed", self._on_repeat_mode_changed)
         self.player.connect("volume-changed", self._on_volume_changed)
+        self.player.connect("prev-next-invalidated", self._on_prev_next_invalidated)
 
     def _get_playback_status(self):
         state = self.player.get_playback_status()
@@ -65,6 +66,14 @@ class MediaPlayer2Service(dbus.service.Object):
         self.PropertiesChanged(self.MEDIA_PLAYER2_PLAYER_IFACE,
             {
                 'Volume': self.player.get_volume(),
+            },
+            [])
+
+    def _on_prev_next_invalidated(self, player, data=None):
+        self.PropertiesChanged(self.MEDIA_PLAYER2_PLAYER_IFACE,
+            {
+                'CanGoNext': self.player.has_next(),
+                'CanGoPrevious': self.player.has_previous(),
             },
             [])
 
@@ -140,6 +149,8 @@ class MediaPlayer2Service(dbus.service.Object):
                 'Volume': self.player.get_volume(),
                 'MinimumRate': 1.0,
                 'MaximumRate': 1.0,
+                'CanGoNext': self.player.has_next(),
+                'CanGoPrevious': self.player.has_previous(),
                 'CanPlay': self.player.currentTrack is not None,
                 'CanPause': self.player.currentTrack is not None,
                 'CanSeek': True,
