@@ -30,6 +30,7 @@ class Player(GObject.GObject):
         'playing-changed': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'playlist-item-changed': (GObject.SIGNAL_RUN_FIRST, None, (Gtk.ListStore, Gtk.TreeIter)),
         'current-changed': (GObject.SIGNAL_RUN_FIRST, None, ()),
+        'playback-status-changed': (GObject.SIGNAL_RUN_FIRST, None, ()),
     }
 
     def __init__(self):
@@ -106,6 +107,7 @@ class Player(GObject.GObject):
             self.playBtn.set_image(self._playImage)
             self.progressScale.set_value(0)
             self.progressScale.set_sensitive(False)
+            self.emit('playback-status-changed')
 
     def _on_glib_idle(self):
         self.currentTrack = self.nextTrack
@@ -268,7 +270,7 @@ class Player(GObject.GObject):
         if not self.timeout:
             self.timeout = GLib.timeout_add(1000, self._update_position_callback)
 
-        #self._dbusImpl.emit_property_changed('PlaybackStatus', GLib.Variant.new('s', 'Playing'))
+        self.emit('playback-status-changed')
 
     def pause(self):
         if self.timeout:
@@ -276,7 +278,7 @@ class Player(GObject.GObject):
             self.timeout = None
 
         self.player.set_state(Gst.State.PAUSED)
-        #self._dbusImpl.emit_property_changed('PlaybackStatus', GLib.Variant.new('s', 'Paused'))
+        self.emit('playback-status-changed')
         self.emit('playing-changed')
 
     def stop(self):
@@ -285,7 +287,6 @@ class Player(GObject.GObject):
             self.timeout = None
 
         self.player.set_state(Gst.State.NULL)
-        #self._dbusImpl.emit_property_changed('PlaybackStatus', GLib.Variant.new('s', 'Stopped'))
         self.emit('playing-changed')
 
     def play_next(self):
@@ -454,6 +455,7 @@ class Player(GObject.GObject):
         self.progressScale.set_sensitive(False)
         self.playBtn.set_image(self._playImage)
         self.stop()
+        self.emit('playback-status-changed')
 
     def SeekAsync(self, params, invocation):
         offset = params
