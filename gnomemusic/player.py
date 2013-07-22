@@ -31,6 +31,7 @@ class Player(GObject.GObject):
         'playlist-item-changed': (GObject.SIGNAL_RUN_FIRST, None, (Gtk.ListStore, Gtk.TreeIter)),
         'current-changed': (GObject.SIGNAL_RUN_FIRST, None, ()),
         'playback-status-changed': (GObject.SIGNAL_RUN_FIRST, None, ()),
+        'repeat-mode-changed': (GObject.SIGNAL_RUN_FIRST, None, ()),
     }
 
     def __init__(self):
@@ -432,8 +433,7 @@ class Player(GObject.GObject):
             icon = 'media-playlist-repeat-song-symbolic'
 
         self.repeatBtnImage.set_from_icon_name(icon, 0)
-        #self._dbusImpl.emit_property_changed('LoopStatus', GLib.Variant.new('s', self.LoopStatus))
-        #self._dbusImpl.emit_property_changed('Shuffle', GLib.Variant.new('b', self.Shuffle))
+        self.emit('repeat-mode-changed')
 
     def on_progress_scale_change_value(self, scroll):
         seconds = scroll.get_value() / 60
