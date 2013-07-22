@@ -20,6 +20,7 @@ class MediaPlayer2Service(dbus.service.Object):
         self.player.connect("repeat-mode-changed", self._on_repeat_mode_changed)
         self.player.connect("volume-changed", self._on_volume_changed)
         self.player.connect("prev-next-invalidated", self._on_prev_next_invalidated)
+        self.player.connect("seeked", self._on_seeked)
 
     def _get_playback_status(self):
         state = self.player.get_playback_status()
@@ -77,6 +78,9 @@ class MediaPlayer2Service(dbus.service.Object):
             },
             [])
 
+    def _on_seeked(self, player, position, data=None):
+        self.Seeked(position)
+
     @dbus.service.method(dbus_interface=MEDIA_PLAYER2_IFACE)
     def Raise(self):
         self.app.do_activate()
@@ -110,8 +114,25 @@ class MediaPlayer2Service(dbus.service.Object):
         self.player.set_playing(True)
 
     @dbus.service.method(dbus_interface=MEDIA_PLAYER2_PLAYER_IFACE,
+                         in_signature='x')
+    def Seek(self, offset):
+        self.player.set_position(offset, True, True)
+
+    @dbus.service.method(dbus_interface=MEDIA_PLAYER2_PLAYER_IFACE,
+                         in_signature='ox')
+    def SetPosition(self, track_id, position):
+        if track_id != self.player.get_metadata().get('mpris:trackid'):
+            return
+        self.player.set_position(position)
+
+    @dbus.service.method(dbus_interface=MEDIA_PLAYER2_PLAYER_IFACE,
                          in_signature='s')
     def OpenUri(self, uri):
+        pass
+
+    @dbus.service.signal(dbus_interface=MEDIA_PLAYER2_PLAYER_IFACE,
+                         signature='x')
+    def Seeked(self, position):
         pass
 
     @dbus.service.method(dbus_interface=dbus.PROPERTIES_IFACE,
@@ -147,6 +168,7 @@ class MediaPlayer2Service(dbus.service.Object):
                 'Shuffle': self.player.repeat == RepeatType.SHUFFLE,
                 'Metadata': dbus.Dictionary(self.player.get_metadata(), signature='sv'),
                 'Volume': self.player.get_volume(),
+                'Position': self.player.get_position(),
                 'MinimumRate': 1.0,
                 'MaximumRate': 1.0,
                 'CanGoNext': self.player.has_next(),
