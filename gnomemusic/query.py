@@ -74,7 +74,7 @@ class Query():
                 }
             )
         }
-    ORDER BY nie:title(?album) ?author ?albumyear
+    ORDER BY ?title ?author ?albumyear
     '''.replace('\n', ' ').strip()
 
     ALBUMS_COUNT = '''
