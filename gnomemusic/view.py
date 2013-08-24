@@ -611,3 +611,11 @@ class Artists (ViewContainer):
             if self._last_selection is not None:
                 self.view.get_generic_view().get_selection().select_iter(
                     self._last_selection)
+
+    def _title_compare(self, model, a, b, userdata=None):
+        if str(model[a][2]) == _("All Artists"):
+            return -1
+        elif str(model[b][2]) == _("All Artists"):
+            return 1
+        else:
+            return ViewContainer._title_compare(self, model, a, b, userdata)
