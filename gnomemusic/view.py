@@ -84,11 +84,14 @@ class ViewContainer(Stack):
             GObject.TYPE_BOOLEAN,
             GObject.TYPE_BOOLEAN
         )
+        self._sort_model = Gtk.TreeModelSort(model=self._model)
+        self._sort_model.set_sort_func(2, self._title_compare)
+        self._sort_model.set_sort_column_id(2, Gtk.SortType.ASCENDING)
         self.view = Gd.MainView(
             shadow_type=Gtk.ShadowType.NONE
         )
         self.view.set_view_type(Gd.MainViewType.ICON)
-        self.view.set_model(self._model)
+        self.view.set_model(self._sort_model)
         self.vadjustment = self.view.get_vadjustment()
         self.selection_toolbar = selection_toolbar
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -266,6 +269,20 @@ class ViewContainer(Stack):
     def _on_item_activated(self, widget, id, path):
         pass
 
+    def selection_to_model_path(self, path):
+        return self._sort_model.convert_path_to_child_path(path)
+
+    def model_to_selection_path(self, path):
+        return self._sort_model.convert_child_path_to_path(path)
+
+    def _title_compare(self, model, a, b, userdata=None):
+        if str(model[a][2]).lower() < str(model[b][2]).lower():
+            return -1
+        elif str(model[a][2]).lower() > str(model[b][2]).lower():
+            return 1
+        else:
+            return 0
+
 
 #Class for the Empty View
 class Empty(Stack):
@@ -292,6 +309,7 @@ class Albums(ViewContainer):
         self.set_visible_child(self._grid)
 
     def _on_item_activated(self, widget, id, path):
+        path = self.selection_to_model_path(path)
         _iter = self._model.get_iter(path)
         title = self._model.get_value(_iter, 2)
         artist = self._model.get_value(_iter, 3)
@@ -329,6 +347,7 @@ class Songs(ViewContainer):
         self.player.connect('playlist-item-changed', self.update_model)
 
     def _on_item_activated(self, widget, id, path):
+        path = self.selection_to_model_path(path)
         _iter = self._model.get_iter(path)
         if self._model.get_value(_iter, 8) != self.errorIconName:
             self.player.set_playlist('Songs', None, self._model, _iter, 5)
@@ -535,6 +554,7 @@ class Artists (ViewContainer):
         )
         child_name = "artists_%i" % self.artists_counter
         self.artistAlbumsStack.add_named(self.new_artistAlbumsWidget, child_name)
+        path = self.selection_to_model_path(path)
         _iter = self._model.get_iter(path)
         self._last_selection = _iter
         artist = self._model.get_value(_iter, 2)
