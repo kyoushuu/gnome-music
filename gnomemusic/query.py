@@ -30,18 +30,18 @@ class Query():
 
     ALBUMS = '''
     SELECT DISTINCT
-        rdf:type(?album)
-        tracker:id(?album) AS id
+        rdf:type(?item)
+        tracker:id(?item) AS id
         (
             SELECT
                 nmm:artistName(?artist)
             WHERE {
-                ?album nmm:albumArtist ?artist
+                ?item nmm:albumArtist ?artist
             }
             LIMIT 1
         ) AS artist
-        nie:title(?album) AS title
-        nie:title(?album) AS album
+        nie:title(?item) AS title
+        nie:title(?item) AS album
         tracker:coalesce(
             (
                 SELECT
@@ -50,7 +50,7 @@ class Query():
                         ','
                     )
                 WHERE {
-                    ?album nmm:albumArtist ?artist
+                    ?item nmm:albumArtist ?artist
                 }
             ),
             (
@@ -60,7 +60,7 @@ class Query():
                             SELECT
                                 nmm:artistName(nmm:performer(?_12)) AS perf
                             WHERE {
-                                ?_12 nmm:musicAlbum ?album
+                                ?_12 nmm:musicAlbum ?item
                             }
                             GROUP BY ?perf
                         ),
@@ -72,12 +72,12 @@ class Query():
         ) AS author
         xsd:integer(
             tracker:coalesce(
-                nmm:albumTrackCount(?album),
+                nmm:albumTrackCount(?item),
                 (
                     SELECT
                         COUNT(?_1)
                     WHERE {
-                        ?_1 nmm:musicAlbum ?album ;
+                        ?_1 nmm:musicAlbum ?item ;
                             tracker:available 'true'
                     }
                 )
@@ -87,22 +87,22 @@ class Query():
             SELECT
                 fn:year-from-dateTime(?c)
             WHERE {
-                ?_2 nmm:musicAlbum ?album ;
+                ?_2 nmm:musicAlbum ?item ;
                     nie:contentCreated ?c ;
                     tracker:available 'true'
             }
             LIMIT 1
         ) AS creation-date
         {
-            ?album a nmm:MusicAlbum .
+            ?item a nmm:MusicAlbum .
             FILTER (
                 EXISTS {
-                    ?_3 nmm:musicAlbum ?album ;
+                    ?_3 nmm:musicAlbum ?item ;
                         tracker:available 'true'
                 }
             )
         }
-    ORDER BY fn:lower-case(?title) ?author ?albumyear
+    ORDER BY tracker:added(?item)
     '''.replace('\n', ' ').strip()
 
     ALBUMS_COUNT = '''
